@@ -1,0 +1,10 @@
+cron:
+- description: "tempo worklogs import"
+  url: /tempo/worklogs
+  schedule: every day 00:01
+- description: "tempo plans import"
+  url: /tempo/plans
+  schedule: every day 00:01
+- description: "tempo accounts import"
+  url: /tempo/accounts
+  schedule: every day 00:01

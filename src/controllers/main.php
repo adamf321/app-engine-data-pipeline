@@ -12,5 +12,5 @@ use Psr\Http\Message\ResponseInterface as Response;
  * Home - return a simple message explaining that this is not a valid route!
  */
 $app->get('/', function (Request $request, Response $response) {
-    return $response->write('Nothing to see here!<br>See the <a href="">README</a> for more info about this app.');
+    return $response->write('Nothing to see here!<br>See the <a href="https://bitbucket.org/WeAreNolte/data-pipeline/src">README</a> for more info about this app.');
 })->setName('home');
