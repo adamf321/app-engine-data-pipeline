@@ -32,18 +32,19 @@ gcloud --project nolte-metrics app deploy app.yaml cron.yaml
 
 ### Tempo
 Extracts worklogs, plans and accounts from the Tempo API and loads them into BigQuery. The steps of each extraction are:
-1. Export the data into [NDJSON](http://ndjson.org/) files in GCS. For API reesults which ar paged we need to loop round and create a field for each page of results. Files names are of the format tempo/[table]/[batch_timestamp].[sequence_number].staged.json
-2. Import each file one by one into BigQuery. Change the suffix to .imported.json.
+
+1. Export the data into [NDJSON](http://ndjson.org/) files in GCS. For API results which ar paged we need to loop round and create a field for each page of results. Files names are of the format `tempo/[table]/[batch_timestamp].[sequence_number].staged.json`
+2. Import each file one by one into BigQuery. Change the suffix to `.imported.json`.
 
 We extract all files at the start to make it easier to debug and rerun the job if it fails. The file suffixes also show quickly which files were imported or not. Note that the bucket is configured to delete files older than 30 days.
 
-The endpoints called to run the extract are tempo/worklogs, tempo/plans and tempo/accounts.
+The endpoints called to run the extract are `tempo/worklogs`, `tempo/plans` and `tempo/accounts`.
 
-For worklogs and plans you can specify the upatedFrom param at the end of the URL, eg tempo/worklogs/2019-01-01. By default they will use yesterday's date as the jobs are meant to run every 24hrs to pull in records from the previous day. See `cron.yaml` for the job scheduling.
+For worklogs and plans you can specify the optional upatedFrom param at the end of the URL, eg `tempo/worklogs/2019-01-01`. By default they will use yesterday's date as the jobs are meant to run every 24hrs to pull in records from the previous day. See `cron.yaml` for the job scheduling.
 
-### Adding a new extract
+### Adding a new job
 Please follow the same pattern for other jobs you create:
-- Endpoint name format is [dataset]/[table]{/[optional_additional_params]}
-- Files saved to GCS have format [dataset]/[table]/[batch_timestamp].[sequence_number].staged.json. And update `staged` to `imported` once imported.
-- Add the controller to the src/controllers folder. Each controller represents a dataset.
+- Endpoint name format is `[dataset]/[table]{/[optional_additional_params]}`
+- Files saved to GCS have format `[dataset]/[table]/[batch_timestamp].[sequence_number].staged.json`. And update `staged` to `imported` once imported.
+- Add the controller to the `src/controllers` folder. Each controller represents a dataset.
 
