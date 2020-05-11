@@ -2,16 +2,12 @@
 
 namespace Nolte\Metrics\DataPipeline;
 
-/**
- * Adds all the controllers to $app.  Follows Silex Skeleton pattern.
- */
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
-use Google\Cloud\Logging\LoggingClient;
-use Google\Cloud\SecretManager\V1\SecretManagerServiceClient;
+
 
 /**
- * Extract Tempo data.
+ * Extract Tempo data and import into BigQuery.
  */
 $app->get('/tempo/{table:worklogs|plans|accounts}[/{updatedFrom}]', function(Request $request, Response $response, array $args) {
 
@@ -23,15 +19,13 @@ $app->get('/tempo/{table:worklogs|plans|accounts}[/{updatedFrom}]', function(Req
         }
     }
 
-    $logging = new LoggingClient();
-    $logger = $logging->psrLogger('app');
-
     $table = $args['table'];
+
+    $logger = new Logger();
     $bucket = new Bucket();
 
     $counter = 0;
     $batch_ts = time();
-    $new_latest_update = 0;
     $objects = [];
 
     switch ( $table ) {
@@ -56,13 +50,7 @@ $app->get('/tempo/{table:worklogs|plans|accounts}[/{updatedFrom}]', function(Req
     }
 
     $base_url = "https://api.tempo.io/core/3/$table?" . http_build_query( $params );
-
-    // Get the Tempo Auth Token from the GCP Secrets Manager
-    // https://console.cloud.google.com/security/secret-manager/secret/TEMPO_AUTH_TOKEN?project=nolte-metrics
-    $secrets = new SecretManagerServiceClient();
-    $tempo_secret_name = $secrets->secretVersionName(getenv('GC_PROJECT'), 'TEMPO_AUTH_TOKEN', 'latest');
-    $tempo_secret = $secrets->accessSecretVersion($tempo_secret_name);
-    $temp_auth_token = $tempo_secret->getPayload()->getData();
+    $temp_auth_token = get_secret( 'TEMPO_AUTH_TOKEN' );
 
     $logger->info( "Starting batch $batch_ts with base_url $base_url..." );
 
@@ -74,18 +62,28 @@ $app->get('/tempo/{table:worklogs|plans|accounts}[/{updatedFrom}]', function(Req
 
         // Query the API
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $temp_auth_token"]);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //return the transfer as a string
-        $data_str = curl_exec($ch);
-        curl_close($ch);
+        curl_setopt( $ch, CURLOPT_URL, $url );
+        curl_setopt( $ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $temp_auth_token"] );
+        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, 1 ); //return the transfer as a string
+        $data_str = curl_exec( $ch );
+        $response_code = curl_getinfo( $ch, CURLINFO_RESPONSE_CODE );
+        curl_close( $ch );
+
+        if( $response_code > 299 ) {
+            $logger->error( "Call to Tempo API failed with http response code $response_code. Request URL was $base_url." );
+            return $response->withStatus( 500 );
+        }
 
         $data = \json_decode($data_str);
 
+        if ( is_null( $data ) || '' === $data )  {
+            $logger->error( 'Empty response received from the Tempo API.' );
+            return $response->withStatus( 500 );
+        }
+
         if ( isset( $data->errors ) ) {
-            var_dump( $data->errors );
             $logger->error( $data->errors );
-            return $response->withStatus(500);
+            return $response->withStatus( 500 );
         }
 
         if ( $data->metadata->count > 0 ) {
@@ -98,10 +96,16 @@ $app->get('/tempo/{table:worklogs|plans|accounts}[/{updatedFrom}]', function(Req
             }
 
             // Upload the NDJSON to GCS
-            $objects[] = $bucket->write_string_to_gcs( "tempo/$table/$batch_ts.$counter.staged.json", $ndjson );
+            try {
+                $objects[] = $bucket->write_string_to_gcs( "tempo/$table/$batch_ts.$counter.staged.json", $ndjson );
+            } catch ( Exception $e ) {
+                $logger->error( $e->getMessage() );
+            }
 
             $logger->info( "Wrote file $counter with " . $data->metadata->count . " items (batch $batch_ts)." );
             echo "Wrote file $counter with " . $data->metadata->count . " items (batch $batch_ts).<br>";
+        } elseif ( 1 === $counter ) {
+            $logger->error( 'No items were imported. Does this look right?' );
         }
 
     } while ( isset( $data->metadata->next ) );
@@ -111,8 +115,12 @@ $app->get('/tempo/{table:worklogs|plans|accounts}[/{updatedFrom}]', function(Req
     $bq = new BigQuery();
 
     foreach( $objects as $object ) {
-        $bq->import_file( 'tempo', $table, $object->gcsUri() );
-        $object->rename( \str_replace( '.staged.json', '.imported.json', $object->name() ) );
+        try {
+            $bq->import_file( 'tempo', $table, $object->gcsUri() );
+            $object->rename( \str_replace( '.staged.json', '.imported.json', $object->name() ) );
+        } catch ( Exception $e ) {
+            $logger->error( $e->getMessage() );
+        }
     }
 
     $logger->info( "Completed import of batch $batch_ts. All done." );

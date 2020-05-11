@@ -4,7 +4,8 @@
     "slim/slim": "^3.0",
     "google/cloud-bigquery": "^1.16",
     "google/cloud-logging": "^1.20",
-    "google/cloud-secret-manager": "^1.0"
+    "google/cloud-secret-manager": "^1.0",
+    "wildbit/postmark-php": "^2.10"
   },
   "autoload": {
      "psr-4": {

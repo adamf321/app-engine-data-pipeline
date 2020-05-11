@@ -4,7 +4,6 @@ namespace Nolte\Metrics\DataPipeline;
 
 use Google\Cloud\BigQuery\BigQueryClient;
 use Google\Cloud\Core\ExponentialBackoff;
-use Google\Cloud\Logging\LoggingClient;
 
 /**
  * Represents a BigQuery connection.
@@ -12,7 +11,6 @@ use Google\Cloud\Logging\LoggingClient;
 Class BigQuery {
 
    private $big_query;
-   private $logger;
 
    /**
     * Constructor
@@ -20,9 +18,6 @@ Class BigQuery {
    public function __construct()
    {
       $this->big_query = new BigQueryClient();
-      
-      $logging = new LoggingClient();
-      $this->logger = $logging->psrLogger('app');
    }
 
    /**
@@ -45,7 +40,7 @@ Class BigQuery {
       $backoff->execute(function () use ($job) {
          print('Waiting for job to complete' . PHP_EOL);
          $job->reload();
-         if (!$job->isComplete()) {
+         if( !$job->isComplete() ) {
             throw new Exception('Job has not yet completed', 500);
          }
       });
@@ -54,7 +49,6 @@ Class BigQuery {
       if (isset($job->info()['status']['errorResult'])) {
          $error = $job->info()['status']['errorResult']['message'];
          printf('Error running job: %s' . PHP_EOL, $error);
-         $logger->error( 'Error running job: %s' . PHP_EOL, $error );
          throw new Exception('Error running job: %s' . PHP_EOL, 500);
       } else {
          print('Data imported successfully' . PHP_EOL);

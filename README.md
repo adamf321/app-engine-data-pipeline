@@ -13,6 +13,7 @@ In order for the app to run locally you will need to set-up a [service account](
 GOOGLE_APPLICATION_CREDENTIALS=/Users/adam/Downloads/NolteMetrics-34cc803fcfc5.json \
    GC_PROJECT="nolte-metrics" \
    GC_BUCKET="nolte-metrics.appspot.com" \
+   ALERT_EMAIL="afenton@wearenolte.com" \
    php -d variables_order=EGPCS -S localhost:8085 -t . index.php
 ```
 
@@ -33,7 +34,7 @@ gcloud --project nolte-metrics app deploy app.yaml cron.yaml
 ### Tempo
 Extracts worklogs, plans and accounts from the Tempo API and loads them into BigQuery. The steps of each extraction are:
 
-1. Export the data into [NDJSON](http://ndjson.org/) files in GCS. For API results which ar paged we need to loop round and create a field for each page of results. Files names are of the format `tempo/[table]/[batch_timestamp].[sequence_number].staged.json`
+1. Export the data into [NDJSON](http://ndjson.org/) files in GCS. For API results which ar paged we need to loop round and create a file for each page of results. Files names are of the format `tempo/[table]/[batch_timestamp].[sequence_number].staged.json`
 2. Import each file one by one into BigQuery. Change the suffix to `.imported.json`.
 
 We extract all files at the start to make it easier to debug and rerun the job if it fails. The file suffixes also show quickly which files were imported or not. Note that the bucket is configured to delete files older than 30 days.
@@ -44,6 +45,7 @@ For worklogs and plans you can specify the optional upatedFrom param at the end 
 
 ### Adding a new job
 Please follow the same pattern for other jobs you create:
+
 - Endpoint name format is `[dataset]/[table]{/[optional_additional_params]}`
 - Files saved to GCS have format `[dataset]/[table]/[batch_timestamp].[sequence_number].staged.json`. And update `staged` to `imported` once imported.
 - Add the controller to the `src/controllers` folder. Each controller represents a dataset.

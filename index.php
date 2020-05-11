@@ -37,6 +37,8 @@ $app = new Slim\App([
    ],
 ]);
 
+require __DIR__ . '/src/functions.php';
+
 require __DIR__ . '/src/controllers/main.php';
 require __DIR__ . '/src/controllers/tempo.php';
 

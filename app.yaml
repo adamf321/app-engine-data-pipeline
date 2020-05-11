@@ -5,3 +5,4 @@ runtime: php73
 env_variables:
     GC_PROJECT: "nolte-metrics"
     GC_BUCKET: "nolte-metrics.appspot.com"
+    ALERT_EMAIL: "afenton@wearenolte.com"
