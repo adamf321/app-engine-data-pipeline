@@ -9,12 +9,13 @@ use Psr\Http\Message\ResponseInterface as Response;
 /**
  * Extract Tempo data and import into BigQuery.
  */
-$app->get('/tempo/{table:worklogs|plans|accounts}[/{updatedFrom}]', function(Request $request, Response $response, array $args) {
+$app->get('/tempo/{table:worklogs|plans|accounts}[/{updatedFrom}]', function (Request $request, Response $response, array $args) {
 
-    // Only allow requests from App Engine Cron if running in the App Engine env (ie skipp this check if running locally).
+    // Only allow requests from App Engine Cron if running in the App Engine env
+    // (ie skip this check if running locally).
     if ( getenv('GAE_ENV') !== false ) {
         $request_headers = getallheaders();
-        if( ! isset($request_headers['X-Appengine-Cron']) ) {
+        if ( ! isset($request_headers['X-Appengine-Cron']) ) {
             return $response->withStatus(401);
         }
     }
@@ -69,14 +70,16 @@ $app->get('/tempo/{table:worklogs|plans|accounts}[/{updatedFrom}]', function(Req
         $response_code = curl_getinfo( $ch, CURLINFO_RESPONSE_CODE );
         curl_close( $ch );
 
-        if( $response_code > 299 ) {
-            $logger->error( "Call to Tempo API failed with http response code $response_code. Request URL was $base_url." );
+        if ( $response_code > 299 ) {
+            $logger->error(
+                "Call to Tempo API failed with http response code $response_code. Request URL was $base_url."
+            );
             return $response->withStatus( 500 );
         }
 
         $data = \json_decode($data_str);
 
-        if ( is_null( $data ) || '' === $data )  {
+        if ( is_null( $data ) || '' === $data ) {
             $logger->error( 'Empty response received from the Tempo API.' );
             return $response->withStatus( 500 );
         }
@@ -90,14 +93,14 @@ $app->get('/tempo/{table:worklogs|plans|accounts}[/{updatedFrom}]', function(Req
             // Convert the result to Newline Deliminated JSON, http://ndjson.org/
             $ndjson = '';
         
-            foreach( $data->results as $item ) {
+            foreach ( $data->results as $item ) {
                 $item->_batch_ts = $batch_ts;
                 $ndjson .= \json_encode($item) . "\n";
             }
 
             // Upload the NDJSON to GCS
             try {
-                $objects[] = $bucket->write_string_to_gcs( "tempo/$table/$batch_ts.$counter.staged.json", $ndjson );
+                $objects[] = $bucket->writeStringToGcs( "tempo/$table/$batch_ts.$counter.staged.json", $ndjson );
             } catch ( Exception $e ) {
                 $logger->error( $e->getMessage() );
             }
@@ -107,16 +110,15 @@ $app->get('/tempo/{table:worklogs|plans|accounts}[/{updatedFrom}]', function(Req
         } elseif ( 1 === $counter ) {
             $logger->error( 'No items were imported. Does this look right?' );
         }
-
     } while ( isset( $data->metadata->next ) );
 
     $logger->info( "Completed extraction of batch $batch_ts. Wrote $counter files." );
 
     $bq = new BigQuery();
 
-    foreach( $objects as $object ) {
+    foreach ( $objects as $object ) {
         try {
-            $bq->import_file( 'tempo', $table, $object->gcsUri() );
+            $bq->importFile( 'tempo', $table, $object->gcsUri() );
             $object->rename( \str_replace( '.staged.json', '.imported.json', $object->name() ) );
         } catch ( Exception $e ) {
             $logger->error( $e->getMessage() );

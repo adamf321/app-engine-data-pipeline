@@ -7,13 +7,13 @@ namespace Nolte\Metrics\DataPipeline;
  */
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Dzava\Lighthouse\Lighthouse;
 
 /**
  * Home - return a simple message explaining that this is not a valid route!
  */
-$app->get('/', function (Request $request, Response $response) {
-    return $response->write(
-        'Nothing to see here!<br>See the ' .
-        '<a href="https://bitbucket.org/WeAreNolte/data-pipeline/src">README</a> for more info about this app.'
-    );
-})->setName('home');
+$app->get('/lighthouse', function (Request $request, Response $response) {
+    
+
+    exec("cd /var/www/html/projectfolder/js; node nodefunc.js 2>&1", $out, $err);
+})->setName('lighthouse');

@@ -8,7 +8,7 @@ In order for the app to run locally you will need to set-up a [service account](
 1. Clone this repo
 2. `composer install`
 3. Run the app using the below command:
-   
+  
 ```
 GOOGLE_APPLICATION_CREDENTIALS=/Users/adam/Downloads/NolteMetrics-34cc803fcfc5.json \
    GC_PROJECT="nolte-metrics" \
@@ -20,6 +20,19 @@ GOOGLE_APPLICATION_CREDENTIALS=/Users/adam/Downloads/NolteMetrics-34cc803fcfc5.j
 The GOOGLE_APPLICATION_CREDENTIALS env variable overrides the default user the app is running with. This allows you to authenticate against GCP from your local environment. **Replace /Users/adam/Downloads/NolteMetrics-34cc803fcfc5.json with the path to your key file.**
 
 The other variables simulate the ones your find in app.yml.
+
+### Linting
+This project uses the PSR-2 standards. To lint:
+
+```
+composer lint
+```
+
+To fix automatically:
+
+```
+composer lint-fix
+```
 
 
 ## Deployment

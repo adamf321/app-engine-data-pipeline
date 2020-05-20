@@ -13,5 +13,29 @@
      }
   },
   "require-dev": {
+    "squizlabs/php_codesniffer": "3.4.*",
+    "phpmd/phpmd" : "@stable"
+  },
+  "scripts": {
+    "post-install-cmd": [
+      "@set-up-php-lint"
+    ],
+    "post-update-cmd": [
+      "@set-up-php-lint"
+    ],
+    "set-up-php-lint": [
+      "phpcs --config-set default_standard",
+      "phpcs --config-set show_progress 1",
+      "phpcs --config-set colors 1",
+      "phpcs --config-set show_warnings 1",
+      "phpcs --config-set ignore_warnings_on_exit 1"
+    ],
+    "lint": [
+      "phpcs . --extensions=php",
+      "phpmd . text phpmd.xml --suffixes php --exclude vendor"
+    ],
+    "lint-fix": [
+      "phpcbf src/**.php src/controllers/**.php"
+    ]
   }
 }

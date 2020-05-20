@@ -12,11 +12,12 @@ use Google\Cloud\SecretManager\V1\SecretManagerServiceClient;
  * @param string $name The name of the secret.
  * @return void
  */
-function get_secret( string $name ) {
-   $secrets = new SecretManagerServiceClient();
-   $secret_name = $secrets->secretVersionName(getenv('GC_PROJECT'), $name, 'latest');
-   $secret = $secrets->accessSecretVersion($secret_name);
+function get_secret(string $name)
+{
+    $secrets = new SecretManagerServiceClient();
+    $secret_name = $secrets->secretVersionName(getenv('GC_PROJECT'), $name, 'latest');
+    $secret = $secrets->accessSecretVersion($secret_name);
    
-   return $secret->getPayload()->getData();
+    return $secret->getPayload()->getData();
 }
 
