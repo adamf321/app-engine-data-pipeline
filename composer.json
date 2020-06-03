@@ -31,11 +31,11 @@
       "phpcs --config-set ignore_warnings_on_exit 1"
     ],
     "lint": [
-      "phpcs . --extensions=php",
-      "phpmd . text phpmd.xml --suffixes php --exclude vendor"
+      "phpcs --standard=PSR2 src",
+      "phpmd src text phpmd.xml --suffixes php --exclude vendor"
     ],
     "lint-fix": [
-      "phpcbf src/**.php src/controllers/**.php"
+      "phpcbf --standard=PSR2 src"
     ]
   }
 }

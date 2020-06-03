@@ -4,7 +4,6 @@ namespace Nolte\Metrics\DataPipeline;
 
 use Google\Cloud\SecretManager\V1\SecretManagerServiceClient;
 
-
 /**
  * Get a secret from the GCP Secrets Manager.
  * https://console.cloud.google.com/security/secret-manager/secret/TEMPO_AUTH_TOKEN?project=nolte-metrics.
@@ -20,4 +19,3 @@ function get_secret(string $name)
    
     return $secret->getPayload()->getData();
 }
-

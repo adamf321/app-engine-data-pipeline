@@ -8,7 +8,8 @@ use Google\Cloud\Core\ExponentialBackoff;
 /**
  * Represents a BigQuery connection.
  */
-class BigQuery {
+class BigQuery
+{
 
     private $big_query;
 
@@ -30,7 +31,7 @@ class BigQuery {
     */
     public function importFile(string $dataset, string $table, string $gcsUri)
     {
-        $table = $this->big_query->dataset( $dataset )->table( $table );
+        $table = $this->big_query->dataset($dataset)->table($table);
 
        // create the import job
         $loadConfig = $table->loadFromStorage($gcsUri)
@@ -43,7 +44,7 @@ class BigQuery {
         $backoff->execute(function () use ($job) {
             print('Waiting for job to complete' . PHP_EOL);
             $job->reload();
-            if ( !$job->isComplete() ) {
+            if (!$job->isComplete()) {
                   throw new Exception('Job has not yet completed', 500);
             }
         });

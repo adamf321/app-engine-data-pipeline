@@ -10,7 +10,8 @@ use Postmark\Models\PostmarkException;
  * A logger for logging to the GCP log, https://console.cloud.google.com/logs.
  * Filter on logName="projects/nolte-metrics/logs/data-pipline" to see these logs.
  */
-class Logger {
+class Logger
+{
 
     private $logger;
     private $mail;
@@ -21,9 +22,9 @@ class Logger {
     public function __construct()
     {
         $logging = new LoggingClient();
-        $this->logger = $logging->psrLogger( 'data-pipeline' );
+        $this->logger = $logging->psrLogger('data-pipeline');
 
-        $this->mail = new PostmarkClient( get_secret( 'POSTMARK_AUTH_TOKEN' ) );
+        $this->mail = new PostmarkClient(get_secret('POSTMARK_AUTH_TOKEN'));
     }
 
   /**
@@ -34,7 +35,7 @@ class Logger {
     */
     public function info(string $msg)
     {
-        $this->logger->info( $msg );
+        $this->logger->info($msg);
     }
 
    /**
@@ -46,12 +47,12 @@ class Logger {
     public function error(string $msg)
     {
         $this->mail->sendEmail(
-         'developer@getmoxied.net',
-         getenv( 'ALERT_EMAIL' ),
-         'ERROR: The Data Pipeline Failed',
-         "The error message was: $msg"
+            'developer@getmoxied.net',
+            getenv('ALERT_EMAIL'),
+            'ERROR: The Data Pipeline Failed',
+            "The error message was: $msg"
         );
       
-        $this->logger->error( $msg );
+        $this->logger->error($msg);
     }
 }

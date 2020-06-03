@@ -7,7 +7,8 @@ use Google\Cloud\Storage\StorageClient;
 /**
  * Represents a single bucket on GCS.
  */
-class Bucket {
+class Bucket
+{
 
     private $bucket;
 
@@ -18,7 +19,7 @@ class Bucket {
     {
        // [START gae_php_app_storage_client_setup]
         $storage = new StorageClient();
-        $this->bucket = $storage->bucket( getenv('GC_BUCKET') );
+        $this->bucket = $storage->bucket(getenv('GC_BUCKET'));
        // [END gae_php_app_storage_client_setup]
     }
 
