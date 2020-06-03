@@ -80,7 +80,7 @@ $app->get(TEMPO_PATH, function (Request $request, Response $response, array $arg
 
         $data = \json_decode($data_str);
 
-        if (is_null($data) || '' === $data) {
+        if (empty($data)) {
             $logger->error('Empty response received from the Tempo API.');
             return $response->withStatus(500);
         }
