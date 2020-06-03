@@ -23,7 +23,7 @@ $app->get(TEMPO_PATH, function (Request $request, Response $response, array $arg
 
     $table = $args['table'];
 
-    $logger = new Logger();
+    $logger = new Logger("tempo/$table");
     $bucket = new Bucket();
 
     $counter = 0;
@@ -52,7 +52,7 @@ $app->get(TEMPO_PATH, function (Request $request, Response $response, array $arg
     }
 
     $base_url = "https://api.tempo.io/core/3/$table?" . http_build_query($params);
-    $temp_auth_token = get_secret('TEMPO_AUTH_TOKEN');
+    $temp_auth_token = '7';//get_secret('TEMPO_AUTH_TOKEN');
 
     $logger->info("Starting batch $batch_ts with base_url $base_url...");
 

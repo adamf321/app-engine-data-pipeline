@@ -15,16 +15,19 @@ class Logger
 
     private $logger;
     private $mail;
+    private $job_name;
 
    /**
     * Constructor
     */
-    public function __construct()
+    public function __construct(string $job_name)
     {
         $logging = new LoggingClient();
         $this->logger = $logging->psrLogger('data-pipeline');
 
         $this->mail = new PostmarkClient(get_secret('POSTMARK_AUTH_TOKEN'));
+
+        $this->job_name = $job_name;
     }
 
   /**
@@ -49,7 +52,7 @@ class Logger
         $this->mail->sendEmail(
             'developer@getmoxied.net',
             getenv('ALERT_EMAIL'),
-            'ERROR: The Data Pipeline Failed',
+            "ERROR: Pipeline Failure: $this->job_name",
             "The error message was: $msg"
         );
       
